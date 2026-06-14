@@ -17,7 +17,7 @@ export default function HitMissPieChart() {
   if (algos.length === 0) {
     return (
       <Container header={<Header variant="h2">Hit / Miss 비율</Header>}>
-        <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
+        <div style={{ height: 310, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
           시뮬레이션 실행 후 결과가 표시됩니다
         </div>
       </Container>
@@ -34,7 +34,7 @@ export default function HitMissPieChart() {
       id: name,
       label: name,
       content: (
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={262}>
           <PieChart>
             <Pie
               data={data}
@@ -57,7 +57,9 @@ export default function HitMissPieChart() {
 
   return (
     <Container header={<Header variant="h2">Hit / Miss 비율</Header>}>
-      <Tabs tabs={tabs} />
+      <div style={{ height: 310 }}>
+        <Tabs tabs={tabs} />
+      </div>
     </Container>
   );
 }

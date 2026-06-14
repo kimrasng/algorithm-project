@@ -16,11 +16,9 @@ function MetricCard({ title, value, description }: MetricCardProps) {
       <Box variant="h1" fontSize="display-l" fontWeight="bold">
         {value}
       </Box>
-      {description && (
-        <Box variant="small" color="text-body-secondary">
-          {description}
-        </Box>
-      )}
+      <Box variant="small" color="text-body-secondary">
+        {description ?? '\u00A0'}
+      </Box>
     </Container>
   );
 }

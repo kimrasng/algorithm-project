@@ -23,7 +23,7 @@ export default function Dashboard() {
         <ConfigPanel />
         <ActionBar />
 
-        {isRunning && (
+        {isRunning && config.requestCount > 0 && (
           <Container>
             <ProgressBar
               value={progress}

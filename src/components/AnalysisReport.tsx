@@ -8,17 +8,19 @@ export default function AnalysisReport() {
 
   return (
     <Container header={<Header variant="h2">분석 리포트</Header>}>
-      {analysisReport ? (
-        <Box>
-          <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0, lineHeight: '1.6' }}>
-            {analysisReport}
-          </pre>
-        </Box>
-      ) : (
-        <div style={{ height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
-          시뮬레이션 완료 후 분석 리포트가 생성됩니다
-        </div>
-      )}
+      <div style={{ height: 310, overflowY: 'auto' }}>
+        {analysisReport ? (
+          <Box>
+            <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0, lineHeight: '1.6' }}>
+              {analysisReport}
+            </pre>
+          </Box>
+        ) : (
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
+            시뮬레이션 완료 후 분석 리포트가 생성됩니다
+          </div>
+        )}
+      </div>
     </Container>
   );
 }

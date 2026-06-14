@@ -15,6 +15,9 @@ export async function runSimulation(config: SimulationConfig): Promise<void> {
   store.reset();
   store.setRunning(true);
 
+  const isInfinite = config.requestCount === 0;
+  const batchSize = isInfinite ? 1000 : Math.max(1, Math.floor(config.requestCount / 100));
+
   const algorithms: CacheAlgorithm[] = [
     new NoCache(),
     new TTLCache(config.ttlValue, config.cacheSize),
@@ -22,68 +25,80 @@ export async function runSimulation(config: SimulationConfig): Promise<void> {
     new LFUCache(config.cacheSize),
   ];
 
-  const requests = generateRequests(config.domainCount, config.requestCount, config.distribution);
-  const batchSize = Math.max(1, Math.floor(config.requestCount / 100));
   let currentTime = 0;
+  let totalProcessed = 0;
 
-  for (let i = 0; i < requests.length; i++) {
-    if (abortFlag) {
-      store.setRunning(false);
-      return;
-    }
-
-    const domain = requests[i];
-    currentTime += 10;
-
+  const collectAndPush = (i: number, total: number) => {
+    const results: Record<string, ReturnType<CacheAlgorithm['getMetrics']>> = {};
     for (const algo of algorithms) {
-      algo.lookup(domain, currentTime);
+      results[algo.name] = algo.getMetrics();
     }
 
-    if (i % batchSize === 0 || i === requests.length - 1) {
-      const progress = ((i + 1) / requests.length) * 100;
-      const results: Record<string, ReturnType<CacheAlgorithm['getMetrics']>> = {};
-      for (const algo of algorithms) {
-        results[algo.name] = algo.getMetrics();
+    const hitRatioPoint = {
+      timestamp: currentTime,
+      noCache: results['No Cache'].totalRequests > 0
+        ? results['No Cache'].cacheHits / results['No Cache'].totalRequests : 0,
+      ttlCache: results['TTL Cache'].totalRequests > 0
+        ? results['TTL Cache'].cacheHits / results['TTL Cache'].totalRequests : 0,
+      lruCache: results['LRU Cache'].totalRequests > 0
+        ? results['LRU Cache'].cacheHits / results['LRU Cache'].totalRequests : 0,
+      lfuCache: results['LFU Cache'].totalRequests > 0
+        ? results['LFU Cache'].cacheHits / results['LFU Cache'].totalRequests : 0,
+    };
+
+    const responseTimePoint = {
+      timestamp: currentTime,
+      noCache: results['No Cache'].totalRequests > 0
+        ? results['No Cache'].totalResponseTime / results['No Cache'].totalRequests : 0,
+      ttlCache: results['TTL Cache'].totalRequests > 0
+        ? results['TTL Cache'].totalResponseTime / results['TTL Cache'].totalRequests : 0,
+      lruCache: results['LRU Cache'].totalRequests > 0
+        ? results['LRU Cache'].totalResponseTime / results['LRU Cache'].totalRequests : 0,
+      lfuCache: results['LFU Cache'].totalRequests > 0
+        ? results['LFU Cache'].totalResponseTime / results['LFU Cache'].totalRequests : 0,
+    };
+
+    store.setProgress(isInfinite ? 0 : ((i + 1) / total) * 100);
+    store.setCurrentRequest(totalProcessed);
+    store.updateResults(results);
+    store.appendTimeSeries(hitRatioPoint, responseTimePoint);
+  };
+
+  if (isInfinite) {
+    while (!abortFlag) {
+      const requests = generateRequests(config.domainCount, batchSize, config.distribution);
+
+      for (let i = 0; i < requests.length; i++) {
+        if (abortFlag) break;
+        currentTime += 10;
+        totalProcessed++;
+        for (const algo of algorithms) {
+          algo.lookup(requests[i], currentTime);
+        }
       }
 
-      const hitRatioPoint = {
-        timestamp: currentTime,
-        noCache: results['No Cache'].totalRequests > 0
-          ? results['No Cache'].cacheHits / results['No Cache'].totalRequests
-          : 0,
-        ttlCache: results['TTL Cache'].totalRequests > 0
-          ? results['TTL Cache'].cacheHits / results['TTL Cache'].totalRequests
-          : 0,
-        lruCache: results['LRU Cache'].totalRequests > 0
-          ? results['LRU Cache'].cacheHits / results['LRU Cache'].totalRequests
-          : 0,
-        lfuCache: results['LFU Cache'].totalRequests > 0
-          ? results['LFU Cache'].cacheHits / results['LFU Cache'].totalRequests
-          : 0,
-      };
-
-      const responseTimePoint = {
-        timestamp: currentTime,
-        noCache: results['No Cache'].totalRequests > 0
-          ? results['No Cache'].totalResponseTime / results['No Cache'].totalRequests
-          : 0,
-        ttlCache: results['TTL Cache'].totalRequests > 0
-          ? results['TTL Cache'].totalResponseTime / results['TTL Cache'].totalRequests
-          : 0,
-        lruCache: results['LRU Cache'].totalRequests > 0
-          ? results['LRU Cache'].totalResponseTime / results['LRU Cache'].totalRequests
-          : 0,
-        lfuCache: results['LFU Cache'].totalRequests > 0
-          ? results['LFU Cache'].totalResponseTime / results['LFU Cache'].totalRequests
-          : 0,
-      };
-
-      store.setProgress(progress);
-      store.setCurrentRequest(i + 1);
-      store.updateResults(results);
-      store.appendTimeSeries(hitRatioPoint, responseTimePoint);
-
+      collectAndPush(0, 1);
       await new Promise((resolve) => setTimeout(resolve, 16));
+    }
+  } else {
+    const requests = generateRequests(config.domainCount, config.requestCount, config.distribution);
+
+    for (let i = 0; i < requests.length; i++) {
+      if (abortFlag) {
+        store.setRunning(false);
+        return;
+      }
+
+      currentTime += 10;
+      totalProcessed++;
+      for (const algo of algorithms) {
+        algo.lookup(requests[i], currentTime);
+      }
+
+      if (i % batchSize === 0 || i === requests.length - 1) {
+        collectAndPush(i, requests.length);
+        await new Promise((resolve) => setTimeout(resolve, 16));
+      }
     }
   }
 
