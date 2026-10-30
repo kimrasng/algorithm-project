@@ -1,53 +1,55 @@
 # DNS Cache Algorithm Simulator
 
-학교 알고리즘 프로젝트로 제작한 **DNS 캐시 알고리즘 성능 비교·시각화 웹사이트**입니다.
+**English** | [한국어](README.ko.md)
 
-동일한 도메인 요청을 No Cache, TTL, LRU, LFU 방식으로 처리하고, 캐시 적중률과 평균 응답시간의 차이를 그래프로 확인할 수 있습니다. 요청 분포와 캐시 크기 등을 바꾸며 각 정책이 어떤 조건에서 유리한지 살펴보는 것을 목표로 합니다.
+A **web application for comparing and visualizing DNS cache algorithm performance**, built for a school algorithms project.
 
-## 주요 기능
+Process the same sequence of domain requests with No Cache, TTL, LRU, and LFU, then compare cache hit ratios and average response times in charts. Adjust the request distribution, cache capacity, and other settings to explore the conditions where each policy performs well.
 
-- **캐시 정책 비교**: 캐시를 사용하지 않는 기준 모델과 TTL, LRU, LFU를 같은 요청 시퀀스로 비교합니다.
-- **시뮬레이션 설정**: 요청 개수, 도메인 수, 요청 분포, 캐시 크기, TTL을 조정합니다.
-- **실시간 시각화**: 실행 중 누적 통계와 그래프를 갱신하며, 유한 요청 모드에서는 진행률을 표시합니다.
-- **다양한 차트**: 평균 응답시간·적중률 막대 차트, 시간에 따른 변화 선 차트, 알고리즘별 Hit/Miss 원형 차트를 제공합니다.
-- **결과 요약**: 최고 적중률, 최적 응답시간, 처리 요청 수, 총 DNS 조회 수를 카드로 보여줍니다.
-- **분석 리포트**: 시뮬레이션 완료 후 알고리즘별 지표와 비교 요약을 생성합니다.
-- **무한 요청 모드**: 요청 개수를 `0`으로 설정하면 중지할 때까지 요청을 생성합니다.
-- **테마 전환**: 상단의 Light/Dark 버튼으로 화면 테마를 바꿉니다.
+## Features
 
-## 비교 알고리즘
+- **Cache policy comparison**: Compare the no-cache baseline with TTL, LRU, and LFU using the same request sequence.
+- **Simulation settings**: Adjust the request count, domain count, request distribution, cache capacity, and TTL.
+- **Live visualization**: Update cumulative statistics and charts during a run, with progress tracking for finite request mode.
+- **Multiple chart types**: View bar charts for average response time and hit ratio, line charts over time, and hit/miss pie charts for each algorithm.
+- **Results summary**: See cards for the highest hit ratio, best response time, processed requests, and total DNS lookups.
+- **Analysis report**: Generate per-algorithm metrics and a comparison summary after a simulation finishes.
+- **Unlimited request mode**: Set the request count to `0` to keep generating requests until you stop the simulation.
+- **Theme switching**: Switch themes with the Light/Dark button at the top.
 
-| 방식 | 동작 원리 | 현재 구현의 특징 |
+## Algorithms
+
+| Policy | How it works | Implementation details |
 | --- | --- | --- |
-| No Cache | 캐시 없이 모든 요청을 DNS 조회로 처리 | 캐시 적용 전 성능을 비교하는 기준 모델 |
-| TTL Cache | 저장 후 TTL이 지나지 않은 항목만 재사용 | 요청 시 만료 여부를 확인하며, 용량이 가득 차면 가장 먼저 저장된 항목 제거 |
-| LRU Cache | 가장 오랫동안 사용하지 않은 항목부터 제거 | `Map`에서 적중한 항목을 삭제 후 다시 삽입해 접근 순서 관리 |
-| LFU Cache | 접근 횟수가 가장 적은 항목부터 제거 | 접근 횟수가 같으면 마지막 접근 시각이 오래된 항목 제거 |
+| No Cache | Performs a DNS lookup for every request without caching | Baseline for comparing performance before caching |
+| TTL Cache | Reuses entries only while their TTL has not expired | Checks expiration on access and removes the earliest inserted entry when capacity is full |
+| LRU Cache | Evicts the least recently used entry | Tracks access order by deleting and reinserting cache hits in a `Map` |
+| LFU Cache | Evicts the least frequently accessed entry | Breaks frequency ties by evicting the entry with the oldest last-access timestamp |
 
-TTL 설정은 TTL Cache에만 적용됩니다. LRU와 LFU는 시간 만료 없이 용량과 교체 정책에 따라 항목을 관리합니다.
+The TTL setting applies only to TTL Cache. LRU and LFU manage entries using capacity and eviction policies, without time-based expiration.
 
-## 시뮬레이션 설정
+## Simulation Settings
 
-| 설정 | 기본값 | 설명 |
+| Setting | Default | Description |
 | --- | --- | --- |
-| 요청 개수 | `1000` | 생성할 요청 수. `0`이면 무한 요청 모드 |
-| 도메인 수 | `50` | 요청 대상이 되는 가상 도메인의 개수 |
-| 요청 분포 | `Zipf Distribution` | 도메인을 선택하는 방식 |
-| 캐시 크기 | `20` | 캐시에 저장할 수 있는 최대 항목 수 |
-| TTL 값 | `300 ms` | TTL Cache 항목의 유효기간 |
-| 비교 알고리즘 | 전체 선택 | 카드와 차트에 표시할 알고리즘 |
+| Request count | `1000` | Number of requests to generate; `0` enables unlimited request mode |
+| Domain count | `50` | Number of simulated domains available for requests |
+| Request distribution | `Zipf Distribution` | Method used to select domains |
+| Cache capacity | `20` | Maximum number of entries in each cache |
+| TTL | `300 ms` | Lifetime of entries in TTL Cache |
+| Algorithms to compare | All selected | Algorithms displayed in cards and charts |
 
-### 요청 분포
+### Request Distributions
 
-- **Zipf Distribution**: 도메인 순위에 반비례하는 가중치로 요청을 생성합니다. 일부 도메인에 요청이 집중되는 상황을 표현합니다.
-- **Uniform Distribution**: 모든 도메인을 순서대로 반복 요청합니다. 무작위 추출이 아닌 순환 방식입니다.
-- **Random Distribution**: 각 요청마다 모든 도메인 중 하나를 같은 확률로 무작위 선택합니다.
+- **Zipf Distribution**: Generates requests with weights inversely proportional to domain rank, representing traffic concentrated on a few popular domains.
+- **Uniform Distribution**: Requests every domain in sequence, repeatedly. This is a cyclic pattern, not random sampling.
+- **Random Distribution**: Selects a domain independently for each request, with equal probability for every domain.
 
-비교 알고리즘 선택은 카드와 차트의 표시 대상을 바꿉니다. 내부 시뮬레이션은 항상 네 방식을 모두 실행하며, 분석 리포트도 전체 결과를 기준으로 생성합니다.
+Algorithm selection controls which results appear in cards and charts. The simulation always runs all four policies internally, and the analysis report also uses all results.
 
-## 실행 방법
+## Getting Started
 
-Node.js와 npm이 설치된 환경에서 프로젝트 디렉터리로 이동한 뒤 실행합니다. Node.js는 설치된 Vite 버전의 지원 범위를 충족하는 버전을 사용해야 합니다.
+With Node.js and npm installed, open the project directory and run the following commands. Use a Node.js version supported by the installed version of Vite.
 
 ```bash
 cd algorithm-project
@@ -55,71 +57,71 @@ npm ci
 npm run dev
 ```
 
-터미널에 출력되는 로컬 주소를 브라우저에서 엽니다. 별도의 백엔드 서버나 API 키 설정은 필요하지 않습니다.
+Open the local URL printed in the terminal. No separate backend server or API key configuration is required.
 
-### 프로덕션 빌드
+### Production Build
 
 ```bash
 npm run build
 npm run preview
 ```
 
-`build`는 TypeScript 빌드 검사와 Vite 번들링을 수행하며, 결과물은 `dist/`에 생성됩니다. `preview`는 빌드 결과를 로컬에서 확인하는 명령입니다.
+`build` runs TypeScript build checks and bundles the application with Vite, writing the output to `dist/`. `preview` serves the production build locally.
 
-## 사용 방법
+## Usage
 
-1. 요청 개수, 도메인 수, 요청 분포를 설정합니다.
-2. 캐시 크기와 TTL을 입력하고, 표시할 비교 알고리즘을 선택합니다.
-3. **시뮬레이션 시작** 버튼을 누릅니다.
-4. 카드와 차트에서 캐시 적중률, 평균 응답시간, Hit/Miss 비율의 변화를 확인합니다.
-5. 실행 완료 후 분석 리포트에서 알고리즘별 결과를 비교합니다.
-6. 설정을 바꾸고 다시 실행해 조건에 따른 차이를 살펴봅니다. 새 실행은 이전 결과를 초기화합니다.
+1. Set the request count, domain count, and request distribution.
+2. Enter the cache capacity and TTL, then select the algorithms to display.
+3. Click **시뮬레이션 시작** (Start Simulation).
+4. Watch the cards and charts for changes in cache hit ratio, average response time, and hit/miss ratio.
+5. Once the run finishes, compare algorithm results in the analysis report.
+6. Change the settings and run again to explore different conditions. Each new run resets the previous results.
 
-실행 중에는 설정을 변경할 수 없으며, **중지** 버튼으로 종료할 수 있습니다. 유한 요청 모드를 도중에 중지하면 새 분석 리포트는 생성되지 않습니다. 무한 요청 모드는 중지 후 최종 결과와 리포트를 생성합니다.
+Settings cannot be changed during a run. Click **중지** (Stop) to end it. Stopping a finite run early does not generate a new analysis report. Stopping an unlimited run produces final results and a report.
 
-### 비교해 볼 실험
+### Experiments to Try
 
-| 실험 | 변경할 조건 | 관찰할 내용 |
+| Experiment | What to change | What to observe |
 | --- | --- | --- |
-| 캐시 용량 비교 | 도메인 수를 고정하고 캐시 크기 변경 | 저장 공간 증가에 따른 적중률 변화 |
-| 인기 도메인 집중 효과 | Zipf와 Random 분포 비교 | 요청 집중도가 LRU와 LFU에 미치는 영향 |
-| 만료 시간 비교 | 같은 조건에서 TTL 변경 | 만료 주기가 TTL Cache의 적중률과 조회 수에 미치는 영향 |
-| 순환 요청 비교 | Uniform에서 캐시 크기를 도메인 수보다 작게 설정 | 반복 순회 패턴에서 캐시 교체가 발생하는 양상 |
+| Cache capacity | Keep the domain count fixed and change cache capacity | How additional storage affects the hit ratio |
+| Popular-domain concentration | Compare Zipf and Random distributions | How concentrated traffic affects LRU and LFU |
+| Expiration time | Change TTL while keeping other settings fixed | How expiration affects TTL Cache hit ratio and lookup count |
+| Cyclic requests | Use Uniform with a cache capacity smaller than the domain count | Eviction behavior under a repeating traversal pattern |
 
-## 지표와 시뮬레이션 모델
+## Metrics and Simulation Model
 
-| 지표 | 계산·해석 방법 |
+| Metric | Calculation and interpretation |
 | --- | --- |
-| Cache Hit Ratio | 캐시 적중 수 / 전체 요청 수 × 100 |
-| 평균 응답시간 | 누적 모의 응답시간 / 전체 요청 수 |
-| DNS Lookup 횟수 | 캐시 미스로 DNS 조회가 필요했다고 가정한 횟수 |
-| 메모리 사용량 | 캐시에 저장된 항목 수. 실제 바이트 단위 메모리 사용량은 아님 |
-| Throughput | 처리 요청 수 / 실행 시작 후 실제 경과 시간. 분석 리포트에 표시 |
+| Cache Hit Ratio | Cache hits / total requests × 100 |
+| Average response time | Cumulative simulated response time / total requests |
+| DNS lookups | Number of cache misses assumed to require a DNS lookup |
+| Memory usage | Number of entries stored in the cache, not actual memory usage in bytes |
+| Throughput | Processed requests / actual elapsed time since the run started; shown in the analysis report |
 
-이 프로젝트는 **브라우저에서 동작하는 교육용 시뮬레이터**입니다. 실제 DNS 서버에 질의하거나 네트워크 지연을 측정하지 않습니다.
+This project is an **educational simulator that runs in the browser**. It does not query real DNS servers or measure network latency.
 
-- 가상 도메인과 IP 주소를 생성해 캐시 정책을 실행합니다.
-- 캐시 적중 시 응답시간은 `5 ms 이상 8 ms 미만`, 미스 시에는 `100 ms 이상 150 ms 미만`의 난수로 모델링합니다.
-- 요청 한 건마다 시뮬레이션 시간을 `10 ms`씩 증가시킵니다. TTL과 시간축은 이 가상 시간을 기준으로 동작합니다.
-- 시간별 선 차트는 각 시점까지의 **누적 적중률과 누적 평균 응답시간**을 표시하며, 최근 200개 갱신 지점을 유지합니다.
-- 요청 생성과 모의 응답시간에 난수를 사용하므로 같은 설정으로 실행해도 결과가 달라질 수 있습니다.
-- Throughput은 브라우저 실행과 화면 갱신 시간의 영향을 받으므로 실제 DNS 서버 처리량이나 알고리즘 자체의 실행 속도로 해석하지 않습니다.
+- Cache policies operate on generated domains and IP addresses.
+- Response times are modeled with random values from `5 ms` inclusive to `8 ms` exclusive for hits, and from `100 ms` inclusive to `150 ms` exclusive for misses.
+- Each request advances simulated time by `10 ms`. TTL and the time axis use this virtual clock.
+- Time-series charts show the **cumulative hit ratio and cumulative average response time** at each point, retaining the latest 200 updates.
+- Request generation and simulated response times use randomness, so results can differ between runs with identical settings.
+- Throughput depends on browser execution and rendering time. It should not be interpreted as real DNS server throughput or the execution speed of an algorithm alone.
 
-## 기술 스택
+## Tech Stack
 
-| 구분 | 사용 기술 |
+| Area | Technology |
 | --- | --- |
 | UI | React 18, TypeScript |
-| 개발 서버·빌드 | Vite 6 |
-| UI 컴포넌트·테마 | Cloudscape Design System |
-| 차트 | Recharts |
-| 상태 관리 | Zustand |
+| Development server and build | Vite 6 |
+| UI components and themes | Cloudscape Design System |
+| Charts | Recharts |
+| State management | Zustand |
 
-## 프로젝트 구조
+## Project Structure
 
 ```text
 src/
-├── algorithms/             # 캐시 알고리즘 구현 및 공통 타입
+├── algorithms/             # Cache implementations and shared types
 │   ├── NoCache.ts
 │   ├── TTLCache.ts
 │   ├── LRUCache.ts
@@ -127,22 +129,22 @@ src/
 │   ├── types.ts
 │   └── index.ts
 ├── components/
-│   ├── charts/             # 막대·선·원형 차트
-│   ├── ConfigPanel.tsx     # 시뮬레이션 설정
-│   ├── ActionBar.tsx       # 시작·중지 버튼
-│   ├── Dashboard.tsx       # 대시보드 화면 구성
-│   ├── MetricsCards.tsx    # 주요 지표 카드
-│   └── AnalysisReport.tsx  # 분석 리포트 표시
+│   ├── charts/             # Bar, line, and pie charts
+│   ├── ConfigPanel.tsx     # Simulation settings
+│   ├── ActionBar.tsx       # Start and stop buttons
+│   ├── Dashboard.tsx       # Dashboard composition
+│   ├── MetricsCards.tsx    # Key metric cards
+│   └── AnalysisReport.tsx  # Analysis report display
 ├── hooks/
-│   └── useSimulation.ts    # 요청 처리·통계 갱신·실행 제어
+│   └── useSimulation.ts    # Request processing, statistics, and run control
 ├── store/
-│   └── simulationStore.ts  # 설정과 결과의 전역 상태
+│   └── simulationStore.ts  # Global settings and results state
 ├── utils/
-│   ├── distribution.ts     # 요청 분포 생성
-│   ├── analysis.ts         # 분석 리포트 생성
-│   └── export.ts           # CSV·스크린샷 내보내기 유틸리티
-├── App.tsx                 # 앱 레이아웃·테마 적용
-└── main.tsx                # React 진입점
+│   ├── distribution.ts     # Request distribution generation
+│   ├── analysis.ts         # Analysis report generation
+│   └── export.ts           # CSV and screenshot export utilities
+├── App.tsx                 # Application layout and theming
+└── main.tsx                # React entry point
 ```
 
-`export.ts`에는 요약·상세 CSV와 스크린샷 내보내기 함수가 구현되어 있지만, 현재 화면에는 이를 실행하는 버튼이 연결되어 있지 않습니다.
+`export.ts` implements summary CSV, detailed CSV, and screenshot export functions, but the current interface does not have buttons connected to them.
